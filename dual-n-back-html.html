@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual N-Back Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .start-button {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .pause-button {
+            background-color: #6b7280;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+            width: 256px;
+            height: 256px;
+            margin: 20px auto;
+            background-color: #f3f4f6;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .square {
+            width: 64px;
+            height: 64px;
+            background-color: #3b82f6;
+            border-radius: 4px;
+        }
+        .letter {
+            text-align: center;
+            font-size: 36px;
+            font-weight: bold;
+            height: 64px;
+            margin: 20px 0;
+        }
+        .instructions {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const DualNBackGame = () => {
+            const [nBack, setNBack] = React.useState(2);
+            const [sequence, setSequence] = React.useState([]);
+            const [currentIndex, setCurrentIndex] = React.useState(-1);
+            const [score, setScore] = React.useState(0);
+            const [isPlaying, setIsPlaying] = React.useState(false);
+            const [isPaused, setIsPaused] = React.useState(false);
+            const [visualMatches, setVisualMatches] = React.useState([]);
+            const [audioMatches, setAudioMatches] = React.useState([]);
+            const [speed, setSpeed] = React.useState(3000);
+            
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            const positions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+            const generateSequence = () => {
+                const newSequence = Array(20).fill(null).map(() => ({
+                    position: positions[Math.floor(Math.random() * positions.length)],
+                    letter: letters[Math.floor(Math.random() * letters.length)]
+                }));
+                setSequence(newSequence);
+                setCurrentIndex(-1);
+                setScore(0);
+                setVisualMatches([]);
+                setAudioMatches([]);
+                setIsPaused(false);
+            };
+
+            const checkMatch = React.useCallback(() => {
+                if (currentIndex >= nBack) {
+                    const visualMatch = sequence[currentIndex].position === sequence[currentIndex - nBack].position;
+                    const audioMatch = sequence[currentIndex].letter === sequence[currentIndex - nBack].letter;
+                    return { visualMatch, audioMatch };
+                }
+                return { visualMatch: false, audioMatch: false };
+            }, [currentIndex, nBack, sequence]);
+
+            const handleKeyPress = React.useCallback((e) => {
+                if (!isPlaying || currentIndex < nBack || isPaused) return;
+
+                const { visualMatch, audioMatch } = checkMatch();
+
+                if (e.key === 'a' || e.key === 'A') {
+                    setVisualMatches(prev => [...prev, visualMatch]);
+                    if (visualMatch) setScore(prev => prev + 1);
+                }
+                if (e.key === 'l' || e.key === 'L') {
+                    setAudioMatches(prev => [...prev, audioMatch]);
+                    if (audioMatch) setScore(prev => prev + 1);
+                }
+                if (e.key === ' ') {
+                    setIsPaused(prev => !prev);
+                }
+            }, [isPlaying, currentIndex, nBack, checkMatch, isPaused]);
+
+            React.useEffect(() => {
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
+            }, [handleKeyPress]);
+
+            React.useEffect(() => {
+                let timer;
+                if (isPlaying && !isPaused && currentIndex < sequence.length - 1) {
+                    timer = setTimeout(() => {
+                        setCurrentIndex(prev => prev + 1);
+                    }, speed);
+                } else if (currentIndex === sequence.length - 1) {
+                    setIsPlaying(false);
+                    setIsPaused(false);
+                }
+                return () => clearTimeout(timer);
+            }, [isPlaying, isPaused, currentIndex, sequence.length, speed]);
+
+            const startGame = () => {
+                generateSequence();
+                setIsPlaying(true);
+                setCurrentIndex(0);
+            };
+
+            const togglePause = () => {
+                setIsPaused(prev => !prev);
+            };
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <h1 className="card-title">Dual {nBack}-Back Game</h1>
+                    </div>
+                    <div className="controls">
+                        <div className="control-group">
+                            <label>N-Back Level:</label>
+                            <select 
+                                value={nBack} 
+                                onChange={(e) => setNBack(Number(e.target.value))}
+                                disabled={isPlaying && !isPaused}
+                            >
+                                {[1, 2, 3, 4, 5].map(n => (
+                                    <option key={n} value={n}>{n}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="control-group">
+                            <label>Speed (ms):</label>
+                            <select 
+                                value={speed} 
+                                onChange={(e) => setSpeed(Number(e.target.value))}
+                                disabled={isPlaying && !isPaused}
+                            >
+                                {[1000, 1500, 2000, 2500, 3000, 3500, 4000].map(s => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="controls">
+                        <button
+                            onClick={startGame}
+                            disabled={isPlaying}
+                            className="start-button"
+                        >
+                            Start Game
+                        </button>
+                        
+                        {isPlaying && (
+                            <button
+                                onClick={togglePause}
+                                className="pause-button"
+                            >
+                                {isPaused ? '▶ Resume' : '⏸ Pause'}
+                            </button>
+                        )}
+                        
+                        <div>Score: {score}</div>
+                    </div>
+
+                    <div className="grid">
+                        {currentIndex >= 0 && (
+                            <div 
+                                className="square"
+                                style={{
+                                    gridRow: Math.floor(sequence[currentIndex].position / 3) + 1,
+                                    gridColumn: (sequence[currentIndex].position % 3) + 1
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    <div className="letter">
+                        {currentIndex >= 0 ? sequence[currentIndex].letter : ''}
+                    </div>
+
+                    <div className="instructions">
+                        <div>Press 'A' if the position matches {nBack} trials back</div>
+                        <div>Press 'L' if the letter matches {nBack} trials back</div>
+                        <div>Press SPACEBAR to pause/resume</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DualNBackGame />);
+    </script>
+</body>
+</html>
