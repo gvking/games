@@ -181,18 +181,20 @@
 
             React.useEffect(() => {
                 let timer;
-                if (isPlaying && !isPaused && mistakes < 3) {
-                    if (currentIndex >= sequence.length - 3) {
-                        setSequence(prev => [...prev, generateNewPosition()]);
+                if (isPlaying && !isPaused) {
+                    if (mistakes >= 3) {
+                        setIsPlaying(false);
+                        setIsPaused(false);
+                        alert(`Game Over! Final Score: ${score}`);
+                    } else {
+                        if (currentIndex >= sequence.length - 3) {
+                            setSequence(prev => [...prev, generateNewPosition()]);
+                        }
+                        
+                        timer = setTimeout(() => {
+                            setCurrentIndex(prev => prev + 1);
+                        }, speed);
                     }
-                    
-                    timer = setTimeout(() => {
-                        setCurrentIndex(prev => prev + 1);
-                    }, speed);
-                } else if (mistakes >= 3) {
-                    setIsPlaying(false);
-                    setIsPaused(false);
-                    alert(`Game Over! Final Score: ${score}`);
                 }
                 return () => clearTimeout(timer);
             }, [isPlaying, isPaused, currentIndex, sequence.length, speed, mistakes, score]);
