@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Training Games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0F172A;
+            min-height: 100vh;
+            color: #E2E8F0;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #60A5FA, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-16">
+        <h1 class="text-5xl font-bold text-center mb-12 gradient-text">Brain Training Games</h1>
+        
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <!-- Synesthesia Trainer Card -->
+            <a href="complete-synesthesia-trainer.html" class="game-card rounded-2xl p-6 block">
+                <h2 class="text-2xl font-bold mb-4 text-blue-400">Synesthesia Trainer</h2>
+                <p class="text-gray-400 mb-4">
+                    Train your brain to associate letters with colors. Improve your memory and cognitive abilities through synesthetic associations.
+                </p>
+                <div class="text-indigo-400 font-semibold">Try it now →</div>
+            </a>
+
+            <!-- Dual N-Back Card -->
+            <a href="dual-n-back-html.html" class="game-card rounded-2xl p-6 block">
+                <h2 class="text-2xl font-bold mb-4 text-purple-400">Dual N-Back</h2>
+                <p class="text-gray-400 mb-4">
+                    Challenge your working memory with this scientifically-proven cognitive training exercise. Track both visual and auditory patterns.
+                </p>
+                <div class="text-indigo-400 font-semibold">Try it now →</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html> 
